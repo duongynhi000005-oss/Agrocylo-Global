@@ -17,7 +17,10 @@ interface StoreEntry {
 const memoryStore = new Map<string, StoreEntry>();
 
 export function createRateLimitStore(): {
-  increment(key: string, windowMs: number): Promise<{ count: number; resetAt: Date }>;
+  increment(
+    key: string,
+    windowMs: number,
+  ): Promise<{ count: number; resetAt: Date }>;
 } {
   return {
     async increment(key: string, windowMs: number) {

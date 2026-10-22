@@ -1,12 +1,11 @@
-import { scValToNative, xdr } from "@stellar/stellar-sdk";
-import type {
-  EventAction,
-  ParsedEvent,
-  RawSorobanEvent,
-} from "./types.js";
-import logger from "../config/logger.js";
-import { recordParseError } from "./metrics.js";
-import { validateEventSchema, EVENT_SCHEMA_VERSION } from "./schema.js";
+import { scValToNative, xdr } from '@stellar/stellar-sdk';
+import type { EventAction, ParsedEvent, RawSorobanEvent } from './types.js';
+import logger from '../config/logger.js';
+import { recordParseError } from './metrics.js';
+import {
+  validateEventSchema,
+  EVENT_SCHEMA_VERSION as _EVENT_SCHEMA_VERSION,
+} from './schema.js';
 
 /**
  * Decodes base64-encoded XDR ScVal topics and value from a raw Soroban event
@@ -16,11 +15,13 @@ import { validateEventSchema, EVENT_SCHEMA_VERSION } from "./schema.js";
 export class ProductionEventParser {
   static parse(raw: RawSorobanEvent): ParsedEvent {
     const topics = raw.topic.map((t) =>
-      scValToNative(xdr.ScVal.fromXDR(t, "base64")),
+      scValToNative(xdr.ScVal.fromXDR(t, 'base64')),
     );
 
     if (topics.length < 2) {
-      throw new Error(`Event ${raw.id}: expected ≥2 topics, got ${topics.length}`);
+      throw new Error(
+        `Event ${raw.id}: expected ≥2 topics, got ${topics.length}`,
+      );
     }
 
     const namespace: string = String(topics[0]);
@@ -29,7 +30,7 @@ export class ProductionEventParser {
 
     let data: unknown[];
     try {
-      const native = scValToNative(xdr.ScVal.fromXDR(raw.value, "base64"));
+      const native = scValToNative(xdr.ScVal.fromXDR(raw.value, 'base64'));
       data = Array.isArray(native) ? native : [native];
     } catch {
       throw new Error(`Event ${raw.id}: malformed value XDR`);
@@ -37,7 +38,9 @@ export class ProductionEventParser {
 
     const validation = validateEventSchema(action, data);
     if (!validation.valid) {
-      throw new Error(`Event ${raw.id}: schema validation failed - ${validation.reason}`);
+      throw new Error(
+        `Event ${raw.id}: schema validation failed - ${validation.reason}`,
+      );
     }
 
     const base = {
@@ -50,7 +53,7 @@ export class ProductionEventParser {
     };
 
     switch (action) {
-      case "campaign.created":
+      case 'campaign.created':
         return {
           ...base,
           action,
@@ -61,7 +64,7 @@ export class ProductionEventParser {
           deadline: String(data[4]),
         };
 
-      case "campaign.invested":
+      case 'campaign.invested':
         return {
           ...base,
           action,
@@ -71,7 +74,7 @@ export class ProductionEventParser {
           totalRaised: String(data[3]),
         };
 
-      case "campaign.settled":
+      case 'campaign.settled':
         return {
           ...base,
           action,
@@ -79,7 +82,7 @@ export class ProductionEventParser {
           totalRevenue: String(data[1]),
         };
 
-      case "order.created":
+      case 'order.created':
         return {
           ...base,
           action,
@@ -89,7 +92,7 @@ export class ProductionEventParser {
           amount: String(data[3]),
         };
 
-      case "order.confirmed":
+      case 'order.confirmed':
         return {
           ...base,
           action,
@@ -98,7 +101,7 @@ export class ProductionEventParser {
           campaignId: String(data[2]),
         };
 
-      case "dispute.opened":
+      case 'dispute.opened':
         return {
           ...base,
           action,
@@ -109,7 +112,7 @@ export class ProductionEventParser {
           orderId: data[4] === undefined ? undefined : String(data[4]),
         };
 
-      case "dispute.evidence_submitted":
+      case 'dispute.evidence_submitted':
         return {
           ...base,
           action,
@@ -119,7 +122,7 @@ export class ProductionEventParser {
           evidenceHash: String(data[3]),
         };
 
-      case "dispute.resolved":
+      case 'dispute.resolved':
         return {
           ...base,
           action,
@@ -128,7 +131,7 @@ export class ProductionEventParser {
           resolutionNotes: data[2] === undefined ? undefined : String(data[2]),
         };
 
-      case "dispute.dismissed":
+      case 'dispute.dismissed':
         return {
           ...base,
           action,
@@ -136,7 +139,7 @@ export class ProductionEventParser {
           dismissalReason: data[1] === undefined ? undefined : String(data[1]),
         };
 
-      case "basket.created":
+      case 'basket.created':
         return {
           ...base,
           action,
@@ -147,7 +150,7 @@ export class ProductionEventParser {
           minDeposit: data[4] === undefined ? undefined : String(data[4]),
         };
 
-      case "basket.deposit":
+      case 'basket.deposit':
         return {
           ...base,
           action,
@@ -157,7 +160,7 @@ export class ProductionEventParser {
           amount: String(data[3]),
         };
 
-      case "basket.funded":
+      case 'basket.funded':
         return {
           ...base,
           action,
@@ -168,7 +171,7 @@ export class ProductionEventParser {
           totalSkipped: data[4] === undefined ? undefined : String(data[4]),
         };
 
-      case "basket.fw_close":
+      case 'basket.fw_close':
         return {
           ...base,
           action,
@@ -178,7 +181,7 @@ export class ProductionEventParser {
           minDeposit: String(data[3]),
         };
 
-      case "basket.withdrawn":
+      case 'basket.withdrawn':
         return {
           ...base,
           action,
@@ -188,7 +191,7 @@ export class ProductionEventParser {
           depositAmount: String(data[3]),
         };
 
-      case "basket.claimed":
+      case 'basket.claimed':
         return {
           ...base,
           action,
@@ -198,13 +201,13 @@ export class ProductionEventParser {
           payout: String(data[3]),
         };
 
-      case "campaign.produce":
-      case "campaign.harvest":
-      case "campaign.failed":
-      case "campaign.disputed":
-      case "campaign.claimed":
-      case "campaign.refunded":
-      case "campaign.tranche":
+      case 'campaign.produce':
+      case 'campaign.harvest':
+      case 'campaign.failed':
+      case 'campaign.disputed':
+      case 'campaign.claimed':
+      case 'campaign.refunded':
+      case 'campaign.tranche':
         return {
           ...base,
           action,
@@ -213,7 +216,9 @@ export class ProductionEventParser {
         };
 
       default:
-        throw new Error(`ProductionEventParser: unknown action "${action}" in event ${raw.id}`);
+        throw new Error(
+          `ProductionEventParser: unknown action "${String(action)}" in event ${raw.id}`,
+        );
     }
   }
 
@@ -223,7 +228,7 @@ export class ProductionEventParser {
       return ProductionEventParser.parse(raw);
     } catch (err) {
       recordParseError();
-      logger.warn("ProductionEventParser: skipping malformed event", {
+      logger.warn('ProductionEventParser: skipping malformed event', {
         id: raw.id,
         error: err instanceof Error ? err.message : String(err),
       });
@@ -233,6 +238,6 @@ export class ProductionEventParser {
 }
 
 function parseEventIndex(id: string): number {
-  const parts = id.split("-");
+  const parts = id.split('-');
   return parts.length >= 2 ? parseInt(parts[1], 10) || 0 : 0;
 }

@@ -67,7 +67,13 @@ router.post(
   validateBody(TransactionIntentCreateSchema),
   asyncHandler(async (req: WalletRequest, res: Response) => {
     const { requestId, txHash, walletAddress, eventType, campaignId } =
-      req.body;
+      req.body as {
+        requestId: string;
+        txHash: string;
+        walletAddress: string;
+        eventType?: string;
+        campaignId?: string | null;
+      };
 
     if (req.walletAddress !== walletAddress) {
       problemDetail(res, req, 403, 'Forbidden', 'Wallet address mismatch');
@@ -166,7 +172,10 @@ router.patch(
   validateParams(TransactionRequestIdParamSchema),
   validateBody(TransactionStatusUpdateSchema),
   asyncHandler(async (req: WalletRequest, res: Response) => {
-    const { status: newStatus, message } = req.body;
+    const { status: newStatus, message: _message } = req.body as {
+      status: TransactionStatus;
+      message?: string;
+    };
 
     const tx = await prisma.transaction.findUnique({
       where: { id: req.params.requestId },
